@@ -148,6 +148,21 @@ def analyze_file(file_path, rules):
             score += 5
     except:
         pass
+    
+    try:
+        utf16_decoded = data.decode('utf-16', errors='ignore')
+        if "Your files have been encrypted" in utf16_decoded:
+            flags.append("Ransom Note (UTF-16)")
+            score += 7
+        if "AES_encrypt" in utf16_decoded or "EVP_aes_256_cbc" in utf16_decoded:
+            flags.append("Encryption API (UTF-16)")
+            score += 5
+        if "vssadmin delete shadows" in utf16_decoded:
+            flags.append("Shadow Copy Delete (UTF-16)")
+            score += 5
+    except:
+        pass
+
 
     if score >= CONFIG["score_thresholds"]["critical"]:
         verdict = "Critical"

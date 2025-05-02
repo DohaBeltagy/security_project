@@ -1,6 +1,6 @@
 rule Mass_File_Operations {
     meta:
-        score = 3
+        score = 5
     strings:
         // Common file extensions targeted by ransomware
         $ext1 = ".encrypted" wide ascii

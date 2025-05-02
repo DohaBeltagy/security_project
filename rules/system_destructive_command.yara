@@ -1,6 +1,6 @@
 rule System_Destruction_Commands {
     meta:
-        score = 5
+        score = 7
         description = "Commands used to delete backups or disable recovery"
     strings:
         $c1 = "vssadmin delete shadows" ascii

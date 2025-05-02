@@ -1,6 +1,6 @@
 rule Crypto_Algorithms {
     meta:
-        score = 5
+        score = 7
         description = "Encryption API used in ransomware"
     strings:
         $aes = "AES_encrypt" ascii wide

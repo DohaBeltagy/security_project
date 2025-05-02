@@ -1,6 +1,6 @@
 rule Ransom_Note {
     meta:
-        score = 7
+        score = 30
     strings:
         // Common phrases in ransom notes
         $note1 = "Your files have been encrypted" wide ascii

@@ -136,6 +136,16 @@ def analyze_file(file_path, rules):
 
     flags = []
     score = 0
+    WHITELIST_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".mp4", ".avi", ".mkv", ".mp3", ".wav", ".flac", ".mov"}
+
+    file_ext = Path(file_path).suffix.lower()
+    if file_ext in WHITELIST_EXTENSIONS:
+        return {
+            "file": file_path,
+            "verdict": "Clean (Whitelisted Type)",
+            "score": 0,
+            "reasons": [f"File type {file_ext} is whitelisted"]
+        }
 
     # === YARA Matching ===
     matches = rules.match(data=data)
@@ -147,7 +157,7 @@ def analyze_file(file_path, rules):
     score += yara_score
 
     # === Mutex keywords ===
-    mutex_keywords = ["mutex", "global\\", "session", "mtx"]
+    mutex_keywords = [ "global\\", "session", "mtx"]
 
     # === Entropy Checks ===
     if calculate_entropy(data) > 7.5:
@@ -160,7 +170,7 @@ def analyze_file(file_path, rules):
             tail = f.read(4096)
             if calculate_entropy(tail) > 7.5:
                 flags.append("High Entropy Overlay")
-                score += 2
+                score += 1
     except Exception:
         pass
 

@@ -152,7 +152,7 @@ def analyze_file(file_path, rules):
     # === Entropy Checks ===
     if calculate_entropy(data) > 7.5:
         flags.append("High Entropy")
-        score += 3
+        score += 2
 
     try:
         with open(file_path, 'rb') as f:
@@ -201,24 +201,37 @@ def analyze_file(file_path, rules):
     embedded_flags = detect_embedded_payloads(data)
     for label in embedded_flags:
         flags.append(f"Embedded Signature: {label}")
-        score += 3
+        score += 2
 
+    
+    note_patterns = [
+        r"your files have been encrypted",
+        r"encrypted",
+        r"decrypt.*bitcoin",
+        r"decrypt.*wallet",
+        r"contact.*(support|email)",
+        r"ID[:=][\s]*[A-Za-z0-9]+"]
     # === String-based Heuristics ===
     try:
         decoded = data.decode(errors='ignore')
         if "vssadmin delete shadows" in decoded:
             flags.append("Shadow Copy Deletion Command")
-            score += 5
+            score += 15
         if "Your files have been encrypted" in decoded:
             flags.append("Ransom Note Text")
             score += 7
         if "AES_encrypt" in decoded or "EVP_aes_256" in decoded:
             flags.append("Encryption API Found")
-            score += 5
+            score += 10
         for keyword in mutex_keywords:
             if keyword in decoded.lower():
                 flags.append("Suspicious Mutex Name")
-                score += 3
+                score += 2
+                break
+        for pattern in note_patterns:
+            if re.search(pattern, decoded, re.IGNORECASE):
+                flags.append("Ransom Note Pattern")
+                score += 30
                 break
     except:
         pass
@@ -237,7 +250,12 @@ def analyze_file(file_path, rules):
         for keyword in mutex_keywords:
             if keyword in utf16_decoded.lower():
                 flags.append("Suspicious Mutex Name (UTF-16)")
-                score += 3
+                score += 2
+                break
+        for pattern in note_patterns:
+            if re.search(pattern, decoded, re.IGNORECASE):
+                flags.append("Ransom Note Pattern")
+                score += 30
                 break
     except:
         pass

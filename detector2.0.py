@@ -137,7 +137,14 @@ def analyze_file(file_path, rules):
     flags = []
     score = 0
     WHITELIST_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".mp4", ".avi", ".mkv", ".mp3", ".wav", ".flac", ".mov"}
-
+    crypto_imports = [
+    "cryptography.hazmat.primitives.ciphers",
+    "cryptography.hazmat.backends",
+    "Cipher(", "algorithms.", "modes.", "default_backend"
+]
+    if any(p in decoded for p in crypto_imports):
+        flags.append("Python Cryptography Module Detected")
+        score += 5
     file_ext = Path(file_path).suffix.lower()
     if file_ext in WHITELIST_EXTENSIONS:
         return {
@@ -225,10 +232,7 @@ def analyze_file(file_path, rules):
         r"pay (.*) to decrypt",
         r"files encrypted",
         r"files locked",
-        r"files stolen",
         r"decrypt|decrypted|decryption",
-        r"unlock|locked|lock",
-        r"recover|recovery|recovered",
         ]
     # === String-based Heuristics ===
     try:
@@ -258,6 +262,9 @@ def analyze_file(file_path, rules):
         if any(p in decoded.lower() for p in obfuscation_patterns):
             flags.append("Script Obfuscation Detected")
             score += 3
+        if any(p in decoded for p in crypto_imports):
+            flags.append("Python Cryptography Module (UTF-16)")
+            score += 5
     except:
         pass
 
@@ -288,6 +295,9 @@ def analyze_file(file_path, rules):
         if any(p in utf16_decoded.lower() for p in obfuscation_patterns):
             flags.append("Script Obfuscation (UTF-16)")
             score += 3
+        if any(p in utf16_decoded for p in crypto_imports):
+            flags.append("Python Cryptography Module (UTF-16)")
+            score += 5
     except:
         pass
     

@@ -1,9 +1,7 @@
 import os
 import math
-import re
 import sys
 import yara
-import magic
 import pefile
 from collections import Counter
 from pathlib import Path
@@ -74,6 +72,7 @@ def suspicious_pe_sections(file_path):
 
 # === Core analysis function ===
 def analyze_file(file_path, rules):
+    print("analyze file")
     try:
         # 1. Load file data
         with open(file_path, "rb") as f:
@@ -137,6 +136,7 @@ def analyze_file(file_path, rules):
 
 # === Directory scanner ===
 def scan_directory(folder, rules):
+    print("scanning directory")
     results = []
     for root, _, files in os.walk(folder):
         for file in files:
@@ -147,13 +147,26 @@ def scan_directory(folder, rules):
     return results
 
 # === Entry point ===
-if __name__ == "__main__":
-    folder = input("Enter folder to scan: ")
-    rules = load_named_yara_rules()  
-    results = scan_directory(folder, rules)
-
-    for res in results:
-        print(f"{res['verdict']}: {res['file']}")
-        print(f"    Score: {res['score']}")
-        if res["reasons"]:
-            print(f"    Reasons: {', '.join(res['reasons'])}")
+def main():
+    try:
+        print("Starting scanner...")  # First debug print
+        rules = load_named_yara_rules()
+        print("YARA rules loaded successfully")  # Second debug print
+        
+        folder = r"..\File-Populator\populated"
+        print(f"Scanning folder: {folder}")  # Third debug print
+        print(f"Folder exists: {os.path.exists(folder)}")  # Check path
+        
+        results = scan_directory(folder, rules)
+        print(f"Scan completed. Found {len(results)} files")  # Fourth debug print
+        
+        for res in results:
+            print(f"{res['verdict']}: {res['file']}")
+            print(f"    Score: {res['score']}")
+            if res["reasons"]:
+                print(f"    Reasons: {', '.join(res['reasons'])}")
+                
+    except Exception as e:
+        print(f"Fatal error: {str(e)}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()

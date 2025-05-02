@@ -142,17 +142,6 @@ def analyze_file(file_path, rules):
     "cryptography.hazmat.backends",
     "Cipher(", "algorithms.", "modes.", "default_backend"
 ]
-    if any(p in decoded for p in crypto_imports):
-        flags.append("Python Cryptography Module Detected")
-        score += 5
-    file_ext = Path(file_path).suffix.lower()
-    if file_ext in WHITELIST_EXTENSIONS:
-        return {
-            "file": file_path,
-            "verdict": "Clean (Whitelisted Type)",
-            "score": 0,
-            "reasons": [f"File type {file_ext} is whitelisted"]
-        }
 
     # === YARA Matching ===
     matches = rules.match(data=data)
@@ -262,7 +251,7 @@ def analyze_file(file_path, rules):
         if any(p in decoded.lower() for p in obfuscation_patterns):
             flags.append("Script Obfuscation Detected")
             score += 3
-        if any(p in decoded for p in crypto_imports):
+        if any(p in decoded.lower() for p in crypto_imports):
             flags.append("Python Cryptography Module (UTF-16)")
             score += 5
     except:

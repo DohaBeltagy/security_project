@@ -14,5 +14,6 @@ rule Mass_File_Operations {
         $traversal1 = "/home/" wide ascii
         $traversal2 = "C:\\Users\\" wide ascii
     condition:
-        any of ($ext*) or any of ($traversal*)
+        any of ($ext1, $ext2, $ext3, $ext4, $vault, $secret) or
+        any of ($traversal1, $traversal2)
 }

@@ -27,8 +27,15 @@ SUSPICIOUS_SECTIONS = {".upx", ".asdf", ".textbss", ".packed"}
 
 # === Load YARA rules ===
 def load_named_yara_rules():
-    rules = yara.compile(filepath='./rules/index.yara', includes=True)
-    return rules
+    rules_dir = './rules'
+    filepaths = {
+        'mass': os.path.join(rules_dir, 'massopeartions.yara'),
+        'aes': os.path.join(rules_dir, 'aes.yara'),
+        'note': os.path.join(rules_dir, 'note.yara')
+    }
+    for name, path in filepaths.items():
+        print(f"{name} path exists:", os.path.exists(path))  # Debug each path
+    return yara.compile(filepaths=filepaths)
 
 
 # === Manual detection functions ===
@@ -72,7 +79,6 @@ def suspicious_pe_sections(file_path):
 
 # === Core analysis function ===
 def analyze_file(file_path, rules):
-    print("analyze file")
     try:
         # 1. Load file data
         with open(file_path, "rb") as f:
@@ -86,6 +92,7 @@ def analyze_file(file_path, rules):
     # 2. YARA rules matching and score calculation
     matches = rules.match(data=data)
     yara_score = 0
+    print("The yara score is: " , yara_score)
     detected_rules = []
     
     for match in matches:
@@ -102,22 +109,27 @@ def analyze_file(file_path, rules):
     # 3. Manual checks
     if calculate_entropy(data) > 7.5:
         flags.append("High Entropy")
+        print("the file" + file_path + "has high entropy")
         score += 3
 
     if has_suspicious_extension(file_path):
         flags.append("Suspicious Extension")
+        print("the file: " + file_path + " has suspicious extension")
         score += 2
 
     if is_key_file(file_path):
         flags.append("Suspicious Filename")
+        print("the file: " + file_path + " has suspicious filename")
         score += 2
 
     if mismatched_magic_bytes(file_path):
         flags.append("Mismatched Magic Bytes")
+        print("the file: " + file_path + " has mismatched magic bytes")
         score += 2
 
     if file_path.lower().endswith(".exe") and suspicious_pe_sections(file_path):
         flags.append("Suspicious PE Sections")
+        print("the file: " + file_path + " has suspicious pe sections")
         score += 3
 
     if score >= CONFIG["score_thresholds"]["critical"]:

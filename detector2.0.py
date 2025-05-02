@@ -203,14 +203,13 @@ def analyze_file(file_path, rules):
         flags.append(f"Embedded Signature: {label}")
         score += 2
 
-    
+    obfuscation_patterns = ["-e ", "iex", "frombase64string", "invoke-expression"]
     note_patterns = [
         r"your files have been encrypted",
         r"encrypted",
         r"decrypt.*bitcoin",
         r"decrypt.*wallet",
-        r"contact.*(support|email)",
-        r"ID[:=][\s]*[A-Za-z0-9]+"]
+        r"contact.*(support|email)",]
     # === String-based Heuristics ===
     try:
         decoded = data.decode(errors='ignore')
@@ -233,6 +232,9 @@ def analyze_file(file_path, rules):
                 flags.append("Ransom Note Pattern")
                 score += 30
                 break
+        if any(p in decoded.lower() for p in obfuscation_patterns):
+            flags.append("Script Obfuscation Detected")
+            score += 3
     except:
         pass
 
@@ -253,13 +255,17 @@ def analyze_file(file_path, rules):
                 score += 2
                 break
         for pattern in note_patterns:
-            if re.search(pattern, decoded, re.IGNORECASE):
+            if re.search(pattern, utf16_decoded, re.IGNORECASE):
                 flags.append("Ransom Note Pattern")
                 score += 30
                 break
+        if any(p in utf16_decoded.lower() for p in obfuscation_patterns):
+            flags.append("Script Obfuscation (UTF-16)")
+            score += 4
     except:
         pass
-
+    
+    
     # === Final Verdict ===
     if score >= CONFIG["score_thresholds"]["critical"]:
         verdict = "Critical"

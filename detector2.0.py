@@ -219,7 +219,17 @@ def analyze_file(file_path, rules):
         r"encrypted",
         r"decrypt.*bitcoin",
         r"decrypt.*wallet",
-        r"contact.*(support|email)",]
+        r"contact.*(support|email)",
+        r"make a payment",
+        r"ransom",
+        r"pay (.*) to decrypt",
+        r"files encrypted",
+        r"files locked",
+        r"files stolen",
+        r"decrypt|decrypted|decryption",
+        r"unlock|locked|lock",
+        r"recover|recovery|recovered",
+        ]
     # === String-based Heuristics ===
     try:
         decoded = data.decode(errors='ignore')
@@ -230,6 +240,9 @@ def analyze_file(file_path, rules):
             flags.append("Ransom Note Text")
             score += 7
         if "AES_encrypt" in decoded or "EVP_aes_256" in decoded:
+            flags.append("Encryption API Found")
+            score += 10
+        if "RSA_encrypt" in decoded or "RSA4096" in decoded:
             flags.append("Encryption API Found")
             score += 10
         for keyword in mutex_keywords:
@@ -252,13 +265,16 @@ def analyze_file(file_path, rules):
         utf16_decoded = data.decode('utf-16', errors='ignore')
         if "Your files have been encrypted" in utf16_decoded:
             flags.append("Ransom Note (UTF-16)")
-            score += 7
+            score += 15
         if "AES_encrypt" in utf16_decoded or "EVP_aes_256_cbc" in utf16_decoded:
             flags.append("Encryption API (UTF-16)")
-            score += 5
+            score += 10
+        if "RSA_encrypt" in utf16_decoded or "RSA4096" in decoded:
+            flags.append("Encryption API Found")
+            score += 10
         if "vssadmin delete shadows" in utf16_decoded:
             flags.append("Shadow Copy Delete (UTF-16)")
-            score += 5
+            score += 7
         for keyword in mutex_keywords:
             if keyword in utf16_decoded.lower():
                 flags.append("Suspicious Mutex Name (UTF-16)")
@@ -271,7 +287,7 @@ def analyze_file(file_path, rules):
                 break
         if any(p in utf16_decoded.lower() for p in obfuscation_patterns):
             flags.append("Script Obfuscation (UTF-16)")
-            score += 4
+            score += 3
     except:
         pass
     

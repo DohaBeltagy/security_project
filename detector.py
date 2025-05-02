@@ -27,7 +27,7 @@ SUSPICIOUS_SECTIONS = {".upx", ".asdf", ".textbss", ".packed"}
 
 # === Load YARA rules ===
 def load_named_yara_rules():
-    rules = yara.compile(filepath='rules/index.yara')
+    rules = yara.compile(filepath='./rules/index.yara', includes=True)
     return rules
 
 
@@ -147,13 +147,14 @@ def scan_directory(folder, rules):
     return results
 
 # === Entry point ===
+
 def main():
     try:
         print("Starting scanner...")  # First debug print
         rules = load_named_yara_rules()
         print("YARA rules loaded successfully")  # Second debug print
         
-        folder = r"..\File-Populator\populated"
+        folder = r".\File-Populator\populated"
         print(f"Scanning folder: {folder}")  # Third debug print
         print(f"Folder exists: {os.path.exists(folder)}")  # Check path
         
@@ -170,3 +171,6 @@ def main():
         print(f"Fatal error: {str(e)}", file=sys.stderr)
         import traceback
         traceback.print_exc()
+
+if __name__ == "__main__":
+    main()

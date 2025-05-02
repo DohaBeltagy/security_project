@@ -1,4 +1,4 @@
-import "aes.yara"
-import "cloaked.yara"
-import "mass_operations.yara"
-import "notes.yara"
+include "aes.yara"
+// include "cloaked.yara"
+// include "mass_operations.yara"
+include "note.yara"

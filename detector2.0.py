@@ -26,9 +26,17 @@ SUSPICIOUS_SECTIONS = {".upx", ".asdf", ".textbss", ".packed", ".encsec", ".xyz"
 
 
 def load_named_yara_rules():
-    rules = yara.compile(filepath='./rules/index.yara', includes=True)
-    return rules
-
+    rules_dir = './rules'
+    filepaths = {
+        'mass': os.path.join(rules_dir, 'massopeartions.yara'),
+        'aes': os.path.join(rules_dir, 'aes.yara'),
+        'note': os.path.join(rules_dir, 'note.yara'),
+        'system_destruct': os.path.join(rules_dir, 'system_destructive_command.yara'),
+        'base64': os.path.join(rules_dir, 'base64_Overflow.yara')
+    }
+    for name, path in filepaths.items():
+        print(f"{name} path exists:", os.path.exists(path))  # Debug each path
+    return yara.compile(filepaths=filepaths)
 
 def calculate_entropy(data: bytes) -> float:
     if not data:

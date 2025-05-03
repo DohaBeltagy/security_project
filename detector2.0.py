@@ -50,8 +50,6 @@ def load_named_yara_rules():
         'system_destruct': os.path.join(rules_dir, 'system_destructive_command.yara'),
         'base64': os.path.join(rules_dir, 'base64_Overflow.yara')
     }
-    for name, path in filepaths.items():
-        print(f"{name} path exists:", os.path.exists(path))  # Debug each path
     return yara.compile(filepaths=filepaths)
 
 def calculate_entropy(data: bytes) -> float:
@@ -90,7 +88,6 @@ def suspicious_pe_sections(file_path):
         pe = pefile.PE(file_path)
         for section in pe.sections:
             name = section.Name.decode(errors="ignore").strip("\x00").lower()
-            print(f"[PE] Section found: {name}")
             if name in SUSPICIOUS_SECTIONS:
                 return True
     except (pefile.PEFormatError, IOError) as e:
@@ -126,7 +123,6 @@ def detect_embedded_payloads(data):
 
 
 def analyze_file(file_path, rules):
-    print(f"Analyzing: {file_path}")
     try:
         with open(file_path, "rb") as f:
             data = f.read()
@@ -142,6 +138,15 @@ def analyze_file(file_path, rules):
     "cryptography.hazmat.backends",
     "Cipher(", "algorithms.", "modes.", "default_backend"
 ]
+    
+    file_ext = Path(file_path).suffix.lower()
+    if file_ext in WHITELIST_EXTENSIONS:
+        return {
+            "file": file_path,
+            "verdict": "Clean (Whitelisted Type)",
+            "score": 0,
+            "reasons": [f"File type {file_ext} is whitelisted"]
+        }
 
     # === YARA Matching ===
     matches = rules.match(data=data)
@@ -254,6 +259,7 @@ def analyze_file(file_path, rules):
         if any(p in decoded.lower() for p in crypto_imports):
             flags.append("Python Cryptography Module (UTF-16)")
             score += 5
+        
     except:
         pass
 
@@ -322,20 +328,28 @@ def main():
     try:
         print("Starting scanner...")
         rules = load_named_yara_rules()
-        print("YARA rules loaded successfully")
 
-        folder = r"./File-Populator/populated"
-        print(f"Scanning folder: {folder}")
-        print(f"Folder exists: {os.path.exists(folder)}")
+        folder = input("Enter the full path of the folder to scan: ").strip()
+
 
         results = scan_directory(folder, rules)
-        print(f"Scan completed. Found {len(results)} files")
+
+        mal_count = 0
+        ben_count = 0
 
         for res in results:
-            print(f"{res['verdict']}: {res['file']}")
-            print(f"    Score: {res['score']}")
-            if res["reasons"]:
-                print(f"    Reasons: {', '.join(res['reasons'])}")
+            verdict_label = "MALICIOUS" if res["verdict"] in {"Critical", "Suspicious"} else "BENIGN"
+            print(f"{os.path.basename(res['file'])} : {verdict_label}")
+            
+            if verdict_label == "MALICIOUS":
+                mal_count += 1
+            else:
+                ben_count += 1
+
+        print(f"\nTotal MALICIOUS files: {mal_count}")
+        print(f"Total BENIGN files: {ben_count}")
+        input("\nScan complete. Press Enter to exit...")
+
 
     except Exception as e:
         print(f"Fatal error: {str(e)}", file=sys.stderr)

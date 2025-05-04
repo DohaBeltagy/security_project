@@ -155,6 +155,7 @@ def analyze_file(file_path, rules):
         rule_score = int(match.meta.get('score', 0))
         yara_score += rule_score
         flags.append(f"YARA Rule: {match.rule} ({rule_score})")
+    print("The yara score: ", yara_score)
     score += yara_score
 
     # === Mutex keywords ===
@@ -340,6 +341,10 @@ def main():
         for res in results:
             verdict_label = "MALICIOUS" if res["verdict"] in {"Critical", "Suspicious"} else "BENIGN"
             print(f"{os.path.basename(res['file'])} : {verdict_label}")
+            print(f"{res['verdict']}: {res['file']}")
+            print(f"    Score: {res['score']}")
+            if res["reasons"]:
+                print(f"    Reasons: {', '.join(res['reasons'])}")
             
             if verdict_label == "MALICIOUS":
                 mal_count += 1
